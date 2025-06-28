@@ -1,7 +1,9 @@
 provider "aws" {
-  region  = "ap-south-1"
-  profile = "default"
+  region                  = var.region
+  access_key              = var.aws_access_key
+  secret_key              = var.aws_secret_key
 }
+
 
 resource "aws_s3_bucket" "model_bucket" {
   bucket = "cloud-ml-lead-models"
