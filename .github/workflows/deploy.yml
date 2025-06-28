@@ -50,24 +50,27 @@ jobs:
         terraform apply -auto-approve \
           -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
           -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-
-  
-    - name: Export Terraform Outputs to ENV
-      working-directory: ${{ env.TF_DIR }}
-      shell: bash
+    
+    - name: Debug Terraform Output
       run: |
-        echo "S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
-        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
-        echo "AWS_REGION=$(terraform output -raw region 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
+        terraform output -json
+  
+    # - name: Export Terraform Outputs to ENV
+    #   working-directory: ${{ env.TF_DIR }}
+    #   shell: bash
+    #   run: |
+    #     echo "S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
+    #     echo "SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
+    #     echo "AWS_REGION=$(terraform output -raw region 2>/dev/null | tr -d '\r')" >> $GITHUB_ENV
 
-    - name: Train Model
-      run: python model/train_model.py
+    # - name: Train Model
+    #   run: python model/train_model.py
 
-    - name: Upload Model to S3
-      run: python infra/upload_model_to_s3.py
+    # - name: Upload Model to S3
+    #   run: python infra/upload_model_to_s3.py
 
-    - name: Deploy Model to SageMaker
-      run: python infra/deploy_model_to_sagemaker.py
+    # - name: Deploy Model to SageMaker
+    #   run: python infra/deploy_model_to_sagemaker.py
 
-    - name: Inference Smoke Test
-      run: python test/smoke_test_inference.py
+    # - name: Inference Smoke Test
+    #   run: python test/smoke_test_inference.py
