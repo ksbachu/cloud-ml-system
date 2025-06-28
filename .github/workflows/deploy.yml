@@ -44,11 +44,19 @@ jobs:
       working-directory: ${{ env.TF_DIR }}
       run: terraform init
 
+    # - name: Import Existing S3 Bucket if Not in State
+    #   working-directory: ${{ env.TF_DIR }}
+    #   run: |
+    #     terraform state show aws_s3_bucket.model_bucket || \
+    #     terraform import aws_s3_bucket.model_bucket cloud-ml-lead-models
+
     - name: Import Existing S3 Bucket if Not in State
       working-directory: ${{ env.TF_DIR }}
       run: |
         terraform state show aws_s3_bucket.model_bucket || \
-        terraform import aws_s3_bucket.model_bucket cloud-ml-lead-models
+        terraform import -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+                         -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+                         aws_s3_bucket.model_bucket cloud-ml-lead-models
 
     - name: Terraform Apply
       working-directory: ${{ env.TF_DIR }}
@@ -57,7 +65,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         terraform apply -auto-approve -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY"
-        
+
     - name: Export Terraform Outputs to ENV
       working-directory: ${{ env.TF_DIR }}
       run: |
