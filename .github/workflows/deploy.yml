@@ -56,14 +56,13 @@ jobs:
       working-directory: ${{ env.TF_DIR }}
       shell: bash
       run: |
-        S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null | tr -d '\r')
-        SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn 2>/dev/null | tr -d '\r')
-        AWS_REGION=$(terraform output -raw region 2>/dev/null | tr -d '\r')
+        terraform output -raw s3_bucket_name | tr -d '\r' | tee -a $GITHUB_ENV > /tmp/s3_bucket.txt
+        terraform output -raw sagemaker_execution_role_arn | tr -d '\r' | tee -a $GITHUB_ENV > /tmp/role_arn.txt
+        terraform output -raw region | tr -d '\r' | tee -a $GITHUB_ENV > /tmp/aws_region.txt
 
-        echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
-        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$SAGEMAKER_EXECUTION_ROLE_ARN" >> $GITHUB_ENV
-        echo "AWS_REGION=$AWS_REGION" >> $GITHUB_ENV
-
+        echo "S3_BUCKET=$(cat /tmp/s3_bucket.txt)" >> $GITHUB_ENV
+        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$(cat /tmp/role_arn.txt)" >> $GITHUB_ENV
+        echo "AWS_REGION=$(cat /tmp/aws_region.txt)" >> $GITHUB_ENV
     - name: Train Model
       run: python model/train_model.py
 
