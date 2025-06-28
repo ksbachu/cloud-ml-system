@@ -51,13 +51,15 @@ jobs:
           -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
           -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
+  
     - name: Export Terraform Outputs to ENV
       working-directory: ${{ env.TF_DIR }}
+      shell: bash
       run: |
-        S3_BUCKET=$(terraform output -raw s3_bucket_name | tr -d '\r')
-        SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn | tr -d '\r')
-        AWS_REGION=$(terraform output -raw region | tr -d '\r')
-        
+        S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null | tr -d '\r')
+        SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn 2>/dev/null | tr -d '\r')
+        AWS_REGION=$(terraform output -raw region 2>/dev/null | tr -d '\r')
+
         echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
         echo "SAGEMAKER_EXECUTION_ROLE_ARN=$SAGEMAKER_EXECUTION_ROLE_ARN" >> $GITHUB_ENV
         echo "AWS_REGION=$AWS_REGION" >> $GITHUB_ENV
