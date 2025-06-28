@@ -1,0 +1,7 @@
+boto3
+joblib
+xgboost
+scikit-learn
+pandas
+numpy
+watchtower

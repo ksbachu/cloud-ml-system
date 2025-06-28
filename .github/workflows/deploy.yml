@@ -1,0 +1,65 @@
+name: ML Model Deployment with SageMaker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering
+
+env:
+  TF_DIR: terraform
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ml-sagemaker-deploy  # Enforce env context
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Python Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.6.6
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Terraform Init and Apply
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        terraform init
+        terraform apply -auto-approve
+
+    - name: Export Terraform Outputs to ENV
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        echo "S3_BUCKET=$(terraform output -raw s3_bucket_name)" >> $GITHUB_ENV
+        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn)" >> $GITHUB_ENV
+        echo "AWS_REGION=$(terraform output -raw region)" >> $GITHUB_ENV
+
+    - name: Train Model
+      run: python model/train_model.py
+
+    - name: Upload Model to S3
+      run: python infra/upload_model_to_s3.py
+
+    - name: Deploy Model to SageMaker
+      run: python infra/deploy_model_to_sagemaker.py
+
+    - name: Inference Smoke Test
+      run: python test/smoke_test_inference.py

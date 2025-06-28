@@ -1,10 +1,9 @@
-# Directory: inference/inference.py
 import boto3
 import json
 import logging
 import watchtower
 import numpy as np
-
+import os
 # Setup logger with CloudWatch
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -12,7 +11,7 @@ logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/inference"))
 
 # Set your endpoint name here
 ENDPOINT_NAME = "lead-scoring-xgb-endpoint"
-REGION = "ap-south-1"
+REGION = os.getenv("AWS_REGION")
 
 # Create SageMaker runtime client
 runtime = boto3.client("sagemaker-runtime", region_name=REGION)

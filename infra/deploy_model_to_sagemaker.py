@@ -1,18 +1,22 @@
 import boto3
 import logging
 import watchtower
-
+import os
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/deploy-model"))
 
+execution_role_arn = os.getenv("SAGEMAKER_EXECUTION_ROLE_ARN")
+bucket = os.getenv("S3_BUCKET")
+region = os.getenv("AWS_REGION")
+
 def deploy_model(
     model_name="lead-scoring-xgb",
-    bucket="cloud-ml-lead-models",
+    bucket=bucket,
     model_key="xgb_lead_model.pkl",
     instance_type="ml.m5.large",
-    region="ap-south-1",
-    role_arn="<REPLACE_WITH_YOUR_EXECUTION_ROLE>"
+    region=region,
+    role_arn=execution_role_arn
 ):
     sagemaker = boto3.client("sagemaker", region_name=region)
 
@@ -49,7 +53,7 @@ def deploy_model(
     logger.info("Waiting for endpoint to be InService...")
     waiter = sagemaker.get_waiter('endpoint_in_service')
     waiter.wait(EndpointName=model_name + "-endpoint")
-    logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint")
+    logger.info(f"Endpoint is deployed and InService: {model_name}-endpoint")
 
 if __name__ == "__main__":
     deploy_model()

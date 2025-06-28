@@ -7,7 +7,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/upload-model"))
 
-def ensure_bucket(bucket_name, region="ap-south-1"):
+region = os.getenv("AWS_REGION")
+bucket_name = os.getenv("S3_BUCKET")
+
+def ensure_bucket(bucket_name, region=region):
     s3 = boto3.client("s3", region_name=region)
     buckets = s3.list_buckets()
     if not any(b["Name"] == bucket_name for b in buckets["Buckets"]):
@@ -16,7 +19,7 @@ def ensure_bucket(bucket_name, region="ap-south-1"):
     else:
         logger.info(f"Bucket {bucket_name} already exists.")
 
-def upload_model(bucket_name="cloud-ml-lead-models", key="xgb_lead_model.pkl"):
+def upload_model(bucket_name=bucket_name, key="xgb_lead_model.pkl"):
     ensure_bucket(bucket_name)
     s3 = boto3.client("s3")
     local_path = "model/output/xgb_lead_model.pkl"
