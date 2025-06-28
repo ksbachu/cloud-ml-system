@@ -13,7 +13,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ml-sagemaker-deploy  # GitHub Environment name
+    environment: ml-sagemaker-deploy  # Enforce env context
 
     steps:
     - name: Checkout Repository
@@ -52,9 +52,12 @@ jobs:
 
     - name: Terraform Apply
       working-directory: ${{ env.TF_DIR }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        terraform apply -auto-approve
-
+        terraform apply -auto-approve -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY"
+        
     - name: Export Terraform Outputs to ENV
       working-directory: ${{ env.TF_DIR }}
       run: |
