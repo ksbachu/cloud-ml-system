@@ -52,6 +52,7 @@ jobs:
           -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
     
     - name: Debug Terraform Output
+      working-directory: ${{ env.TF_DIR }}
       run: |
         terraform output -json
   
