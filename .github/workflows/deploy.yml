@@ -54,9 +54,13 @@ jobs:
     - name: Export Terraform Outputs to ENV
       working-directory: ${{ env.TF_DIR }}
       run: |
-        echo "S3_BUCKET=$(terraform output -raw s3_bucket_name)" >> $GITHUB_ENV
-        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn)" >> $GITHUB_ENV
-        echo "AWS_REGION=$(terraform output -raw region)" >> $GITHUB_ENV
+        S3_BUCKET=$(terraform output -raw s3_bucket_name | tr -d '\r')
+        SAGEMAKER_EXECUTION_ROLE_ARN=$(terraform output -raw sagemaker_execution_role_arn | tr -d '\r')
+        AWS_REGION=$(terraform output -raw region | tr -d '\r')
+        
+        echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$SAGEMAKER_EXECUTION_ROLE_ARN" >> $GITHUB_ENV
+        echo "AWS_REGION=$AWS_REGION" >> $GITHUB_ENV
 
     - name: Train Model
       run: python model/train_model.py
