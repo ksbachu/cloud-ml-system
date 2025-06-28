@@ -13,23 +13,6 @@ provider "aws" {
   secret_key              = var.aws_secret_key
 }
 
-resource "aws_s3_bucket" "tf_state" {
-  bucket = "cloud-ml-terraform-state"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  tags = {
-    Name = "cloud-ml-terraform-state"
-  }
-}
-
-
 
 resource "aws_s3_bucket" "model_bucket" {
   bucket = "cloud-ml-lead-models"
