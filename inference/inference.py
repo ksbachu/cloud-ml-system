@@ -17,6 +17,7 @@ REGION = os.getenv("AWS_REGION")
 runtime = boto3.client("sagemaker-runtime", region_name=REGION)
 
 def invoke_endpoint(payload):
+    logger.info(f"Invoking endpoint: {ENDPOINT_NAME} with payload: {payload}")
     try:
         response = runtime.invoke_endpoint(
             EndpointName=ENDPOINT_NAME,
