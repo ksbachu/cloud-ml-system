@@ -106,7 +106,6 @@ resource "aws_lambda_function" "inference" {
     variables = {
       SAGEMAKER_ENDPOINT_NAME = var.sagemaker_endpoint
       S3_BUCKET               = var.bucket_name
-      AWS_REGION              = var.region
     }
   }
 }
