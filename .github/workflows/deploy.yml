@@ -68,41 +68,40 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform init -reconfigure
 
-      - name: Debug terraform output
+      - name: Export Terraform outputs to GitHub Actions env
         working-directory: ${{ env.TF_DIR }}
         run: |
-          echo "::group::Terraform Raw Output"
-          terraform output -raw s3_bucket_name || true
-          echo "::endgroup::"
+          echo "S3_BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null)" >> $GITHUB_ENV
+          echo "SAGEMAKER_ENDPOINT_NAME=$(terraform output -raw sagemaker_endpoint_name 2>/dev/null)" >> $GITHUB_ENV
+          echo "API_GATEWAY_URL=$(terraform output -raw inference_api_url 2>/dev/null)" >> $GITHUB_ENV
 
-
-      # - name: Conditionally Train and Deploy Model
-      #   run: |
-      #     echo "Training and deploying model due to changes in train_model.py"
-      #     python model/train_model.py
-      #     python infra/upload_model_to_s3.py
+      - name: Conditionally Train and Deploy Model
+        run: |
+          echo "Training and deploying model due to changes in train_model.py"
+          python model/train_model.py
+          python infra/upload_model_to_s3.py
 
           
-      # - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
-      #   working-directory: ${{ env.TF_DIR }}
-      #   run: |
-      #     echo "Packaging Lambda function with dependencies"
-      #     mkdir -p ../build
-      #     pip install -r ../lambda/requirements.txt -t ../build/
-      #     cp ../lambda/inference_lambda.py ../build/
-      #     cd ../build
-      #     zip -r ../lambda_package.zip .
-      #     mv ../lambda_package.zip ../terraform/
-      #     cd ../terraform
-      #     terraform apply -auto-approve
+      - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "Packaging Lambda function with dependencies"
+          mkdir -p ../build
+          pip install -r ../lambda/requirements.txt -t ../build/
+          cp ../lambda/inference_lambda.py ../build/
+          cd ../build
+          zip -r ../lambda_package.zip .
+          mv ../lambda_package.zip ../terraform/
+          cd ../terraform
+          terraform apply -auto-approve
 
-      # - name: Conditionally Load Test SageMaker Endpoint
-      #   run: |
-      #     echo "Running load test"
-      #     python test/load_test_sagemaker.py
+      - name: Conditionally Load Test SageMaker Endpoint
+        run: |
+          echo "Running load test"
+          python test/load_test_sagemaker.py
 
-      # - name: Conditionally Run Inference Smoke Test
-      #   if: needs.detect-changes.outputs.smoke == 'true'
-      #   run: |
-      #     echo "Running smoke test due to changes in smoke_test_inference.py"
-      #     python test/smoke_test_inference.py
+      - name: Conditionally Run Inference Smoke Test
+        if: needs.detect-changes.outputs.smoke == 'true'
+        run: |
+          echo "Running smoke test due to changes in smoke_test_inference.py"
+          python test/smoke_test_inference.py
