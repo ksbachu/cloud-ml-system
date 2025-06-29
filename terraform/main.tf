@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "cloud-ml-terraform-state"        
+    bucket = "cloud-ml-tf-state"        
     key    = "sagemaker/model-deployment.tfstate"
     region = "us-east-1"
     encrypt = true
@@ -15,7 +15,7 @@ provider "aws" {
 
 
 resource "aws_s3_bucket" "model_bucket" {
-  bucket = "cloud-ml-lead-models"
+  bucket = "cloud-ml-lead-scoring-models"
 }
 
 resource "aws_iam_role" "sagemaker_execution_role" {

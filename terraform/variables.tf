@@ -1,5 +1,5 @@
 variable "bucket_name" {
-  default = "cloud-ml-lead-models"
+  default = "cloud-ml-lead-scoring-models"
 }
 
 variable "region" {
