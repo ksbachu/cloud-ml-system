@@ -53,14 +53,19 @@ def lambda_handler(event, context):
             ContentType="text/csv",
             Body=payload
         )
-        result = response["Body"].read().decode()
+        result = response["Body"].read().decode().strip()
         t2 = time.time()
+
+        # Post-process probabilities to predicted class
+        probs = [float(x) for x in result.split(",")]
+        predicted_class = probs.index(max(probs)) + 1  # Convert to class 1–5
 
         # Log and save
         record = {
             "timestamp": int(t1),
             "features": numeric_features,
-            "prediction": result,
+            "raw_probs": probs,
+            "predicted_class": predicted_class,
             "latency": round(t2 - t1, 3)
         }
 
@@ -75,7 +80,8 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "body": json.dumps({
-                "score": result,
+                "predicted_class": predicted_class,
+                "raw_probs": probs,
                 "latency": record["latency"]
             })
         }

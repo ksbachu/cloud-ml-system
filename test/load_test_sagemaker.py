@@ -6,6 +6,7 @@ import json
 import random
 import os
 import watchtower
+
 # === Config ===
 API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
 N_REQUESTS = 1
@@ -15,6 +16,8 @@ LATENCY_THRESHOLD = 1.0  # seconds
 # === Logging Setup ===
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+if not logger.handlers:
+    logger.addHandler(logging.StreamHandler())
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/test-load-api"))
 
 # === Generate Valid Payload ===
@@ -30,7 +33,17 @@ def invoke_api(i):
     try:
         response = requests.post(API_GATEWAY_URL, json=payload)
         latency = time.time() - t1
-        logger.info(f"Request {i+1}: {response.status_code}, latency={latency:.3f}s, body={response.text}")
+        status = response.status_code
+        response_body = response.text
+
+        predicted_class = "N/A"
+        try:
+            data = response.json()
+            predicted_class = data.get("predicted_class", "N/A")
+        except json.JSONDecodeError:
+            logger.warning(f"Request {i+1}: Response not valid JSON")
+
+        logger.info(f"Request {i+1}: status={status}, latency={latency:.3f}s, class={predicted_class}, body={response_body}")
         return latency
     except Exception as e:
         logger.error(f"Request {i+1} failed: {str(e)}")
