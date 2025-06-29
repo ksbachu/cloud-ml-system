@@ -1,6 +1,6 @@
 boto3
 joblib
-xgboost
+xgboost==1.5.1
 scikit-learn
 pandas
 numpy

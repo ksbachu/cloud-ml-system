@@ -29,7 +29,7 @@ def deploy_model(
     container_image = image_uris.retrieve(
         framework='xgboost',
         region=region,
-        version='1.5-1',
+        version='1.7-1',
         instance_type=instance_type
     )
 

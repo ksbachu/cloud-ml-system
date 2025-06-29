@@ -32,7 +32,7 @@ def generate_and_train():
     model.fit(X, y)
 
     os.makedirs("model", exist_ok=True)
-    model_path = "model/xgb_lead_model.pkl"
+    model_path = "model/xgb_lead_model"
 
     # ✅ Save as Pickle file
     joblib.dump(model, model_path)
@@ -40,7 +40,7 @@ def generate_and_train():
 
     # ✅ Archive as model.tar.gz with only the .pkl inside
     with tarfile.open("model/model.tar.gz", "w:gz") as tar:
-        tar.add(model_path, arcname="xgb_lead_model.pkl")
+        tar.add(model_path, arcname="xgb_lead_model")
 
     logger.info("Model archive created at model/model.tar.gz")
 
