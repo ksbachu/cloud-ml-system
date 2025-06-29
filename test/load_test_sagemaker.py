@@ -1,83 +1,69 @@
 import requests
 import concurrent.futures
 import time
-import watchtower
 import logging
-import os
 import json
+import random
 
-# === Configuration ===
-API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
-N_REQUESTS = 1          # Total requests to send
-CONCURRENCY = 1         # Simulate 300 RPS
-LATENCY_THRESHOLD = 1.0   # seconds
-CLOUDWATCH_LOG_GROUP = "/ml/test-load-api"
+# === Config ===
+API_GATEWAY_URL = "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod"  # Replace with actual
+N_REQUESTS = 300
+CONCURRENCY = 300
+LATENCY_THRESHOLD = 1.0  # seconds
 
-# === Logger Setup ===
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(watchtower.CloudWatchLogHandler(log_group=CLOUDWATCH_LOG_GROUP))
+# === Logging Setup ===
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("load_test")
 
-# === Generate 50 Feature CSV Payload ===
+# === Generate Valid Payload ===
 def generate_payload():
-    features = [str(round(i * 0.1, 2)) for i in range(1, 51)]  # 0.1 to 5.0
-    return ",".join(features)
+    # Generate 50 valid float features
+    features = [round(random.uniform(0.1, 5.0), 2) for _ in range(50)]
+    return {"features": features}
 
-PAYLOAD = generate_payload()
-
-# === Invoke API Gateway Endpoint with Latency Tracking ===
-def invoke_endpoint(i):
-    headers = {"Content-Type": "application/json"}
-    json_payload = json.dumps({"features": PAYLOAD})
+# === Invoke API Gateway ===
+def invoke_api(i):
+    payload = generate_payload()
     t1 = time.time()
-    response = requests.post(API_GATEWAY_URL, data=json_payload, headers=headers)
-    t2 = time.time()
-    latency = t2 - t1
-    result = response.text
-    logger.info(f"Request {i+1} latency: {latency:.3f}s, response: {result}")
-    return latency
+    try:
+        response = requests.post(API_GATEWAY_URL, json=payload)
+        latency = time.time() - t1
+        logger.info(f"Request {i+1}: {response.status_code}, latency={latency:.3f}s, body={response.text}")
+        return latency
+    except Exception as e:
+        logger.error(f"Request {i+1} failed: {str(e)}")
+        return None
 
 # === Run Load Test ===
 start = time.time()
 latencies = []
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
-    futures = [executor.submit(invoke_endpoint, i) for i in range(N_REQUESTS)]
+    futures = [executor.submit(invoke_api, i) for i in range(N_REQUESTS)]
     for future in concurrent.futures.as_completed(futures):
-        try:
-            latency = future.result()
-            latencies.append(latency)
-        except Exception as e:
-            logger.error(f"Request failed: {str(e)}")
+        result = future.result()
+        if result is not None:
+            latencies.append(result)
 
 end = time.time()
 
-# === Metrics Summary ===
+# === Summary ===
 over_threshold = sum(1 for l in latencies if l > LATENCY_THRESHOLD)
 p90 = sorted(latencies)[int(0.9 * len(latencies))] if latencies else None
 p95 = sorted(latencies)[int(0.95 * len(latencies))] if latencies else None
 p99 = sorted(latencies)[int(0.99 * len(latencies))] if latencies else None
 
+print("\n=== Load Test Summary ===")
 summary = {
     "Total Requests": N_REQUESTS,
     "Completed": len(latencies),
     "Failed": N_REQUESTS - len(latencies),
-    "Avg Latency (s)": round(sum(latencies) / len(latencies), 3) if latencies else None,
+    "Avg Latency (s)": round(sum(latencies)/len(latencies), 3) if latencies else None,
     "Max Latency (s)": round(max(latencies), 3) if latencies else None,
     "P90 Latency (s)": round(p90, 3) if p90 else None,
     "P95 Latency (s)": round(p95, 3) if p95 else None,
     "P99 Latency (s)": round(p99, 3) if p99 else None,
     "Over 1s": over_threshold
 }
-
-# === Print & Log Summary ===
-print("=== Load Test Summary ===")
 for k, v in summary.items():
     print(f"{k}: {v}")
-    logger.info(f"{k}: {v}")
-
-# === Assert/Fail if too many slow requests ===
-if over_threshold > 0:
-    logger.warning(f"{over_threshold} requests exceeded 1s latency threshold")
-else:
-    logger.info("All requests met latency SLA")
