@@ -1,7 +1,9 @@
+from sagemaker import image_uris
 import boto3
 import logging
 import watchtower
 import os
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/deploy-model"))
@@ -21,12 +23,21 @@ def deploy_model(
     sagemaker = boto3.client("sagemaker", region_name=region)
 
     model_data_url = f"s3://{bucket}/{model_key}"
+
+    # ✅ This retrieves the official public SageMaker image URI
+    container_image = image_uris.retrieve(
+        framework='xgboost',
+        region=region,
+        version='1.5-1',
+        instance_type=instance_type
+    )
+
     container = {
-        'Image': '683313688378.dkr.ecr.ap-south-1.amazonaws.com/sagemaker-xgboost:1.5-1-cpu-py3',
+        'Image': container_image,
         'ModelDataUrl': model_data_url
     }
 
-    logger.info("Creating SageMaker model...")
+    logger.info(f"Creating SageMaker model with container: {container_image}")
     sagemaker.create_model(
         ModelName=model_name,
         ExecutionRoleArn=role_arn,
@@ -50,10 +61,11 @@ def deploy_model(
         EndpointName=model_name + "-endpoint",
         EndpointConfigName=model_name + "-config"
     )
+
     logger.info("Waiting for endpoint to be InService...")
     waiter = sagemaker.get_waiter('endpoint_in_service')
     waiter.wait(EndpointName=model_name + "-endpoint")
-    logger.info(f"Endpoint is deployed and InService: {model_name}-endpoint")
+    logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint")
 
 if __name__ == "__main__":
     deploy_model()
