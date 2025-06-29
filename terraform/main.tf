@@ -101,7 +101,7 @@ resource "aws_lambda_function" "inference" {
   handler          = "inference_lambda.lambda_handler"
   runtime          = "python3.10"
   role             = aws_iam_role.lambda_role.arn
-
+  code_signing_config_arn = null
   environment {
     variables = {
       SAGEMAKER_ENDPOINT_NAME = var.sagemaker_endpoint
