@@ -19,8 +19,8 @@ response = runtime.invoke_endpoint(
     Body=csv_payload
 )
 
-# Process the result
+# Assume SageMaker returned softprob results
 result = response["Body"].read().decode().strip()
-lead_score = int(result) + 1  # 0-based to 1-based
-
-print("Lead Score:", lead_score)
+probs = list(map(float, result.split(',')))
+predicted_class = probs.index(max(probs)) + 1  # now in [1, 5]
+print("Predicted Lead Score (1-5):", predicted_class)
