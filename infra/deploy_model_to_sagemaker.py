@@ -59,18 +59,18 @@ def deploy_model(
 
     logger.info("Creating endpoint...")
     sagemaker.create_endpoint(
-        EndpointName=model_name + "-endpoint",
+        EndpointName=model_name + "-endpoint2",
         EndpointConfigName=model_name + "-config"
     )
 
     try:
         logger.info("Waiting for endpoint to be InService...")
         waiter = sagemaker.get_waiter('endpoint_in_service')
-        waiter.wait(EndpointName=model_name + "-endpoint")
-        logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint")
+        waiter.wait(EndpointName=model_name + "-endpoint2")
+        logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint2")
     except Exception as e:
         logger.error("Endpoint creation failed.")
-        response = sagemaker.describe_endpoint(EndpointName=model_name + "-endpoint")
+        response = sagemaker.describe_endpoint(EndpointName=model_name + "-endpoint2")
         logger.error(f"Endpoint status: {response['EndpointStatus']}")
         logger.error(f"📄 Failure reason: {response.get('FailureReason', 'No detailed reason provided')}")
         raise
