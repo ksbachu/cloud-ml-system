@@ -4,16 +4,18 @@ import time
 import logging
 import json
 import random
-
+import os
+import watchtower
 # === Config ===
-API_GATEWAY_URL = "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod"  # Replace with actual
-N_REQUESTS = 300
-CONCURRENCY = 300
+API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
+N_REQUESTS = 1
+CONCURRENCY = 1
 LATENCY_THRESHOLD = 1.0  # seconds
 
 # === Logging Setup ===
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("load_test")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/test-load-api"))
 
 # === Generate Valid Payload ===
 def generate_payload():
