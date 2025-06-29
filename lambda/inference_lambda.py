@@ -23,11 +23,11 @@ def lambda_handler(event, context):
         body = json.loads(event["body"])
         features = body.get("features")
 
-        if not features or len(features) != 50:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "Exactly 50 features required."})
-            }
+        # if not features or len(features) != 50:
+        #     return {
+        #         "statusCode": 400,
+        #         "body": json.dumps({"error": "Exactly 50 features required."})
+        #     }
 
         payload = ",".join(str(x) for x in features)
         t1 = time.time()
@@ -48,6 +48,7 @@ def lambda_handler(event, context):
             "prediction": result,
             "latency": round(t2 - t1, 3)
         }
+        logger.info("Inference result: %s", json.dumps(record))
 
         # Log to S3
         s3.put_object(
@@ -55,6 +56,7 @@ def lambda_handler(event, context):
             Key=f"inference_logs/{int(t1)}.json",
             Body=json.dumps(record)
         )
+        logger.info("Logged inference result to S3")
 
         logger.info(json.dumps(record))
 
@@ -68,6 +70,7 @@ def lambda_handler(event, context):
 
     except Exception as e:
         logger.error(str(e))
+        logger.info("Error processing request", exc_info=True)
         return {
             "statusCode": 500,
             "body": json.dumps({"error": str(e)})
