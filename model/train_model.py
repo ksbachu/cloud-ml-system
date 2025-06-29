@@ -33,14 +33,14 @@ def generate_and_train():
 
     os.makedirs("model", exist_ok=True)
 
-    # ✅ Valid SageMaker model filename (no dots, no underscores)
+    # Valid SageMaker model filename (no dots, no underscores)
     model_file_name = "xgboostmodel"  # must match regex ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$
 
-    # ✅ Save model using booster.save_model
+    # Save model using booster.save_model
     model.get_booster().save_model(f"model/{model_file_name}")
     logger.info(f"Model saved in XGBoost binary format at: model/{model_file_name}")
 
-    # ✅ Tar it with correct internal file name
+    # Tar it with correct internal file name
     with tarfile.open("model/model.tar.gz", "w:gz") as tar:
         tar.add(f"model/{model_file_name}", arcname=model_file_name)
 
