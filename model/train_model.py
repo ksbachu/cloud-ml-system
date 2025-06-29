@@ -32,7 +32,7 @@ def generate_and_train():
     model.fit(X, y)
 
     os.makedirs("model", exist_ok=True)
-    model_path = "model/xgb_lead_model"
+    model_path = "model/xgb_lead_model.bst"
 
     # ✅ Save as Pickle file
     joblib.dump(model, model_path)
