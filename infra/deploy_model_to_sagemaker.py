@@ -16,7 +16,7 @@ def deploy_model(
     model_name="lead-scoring-xgb",
     bucket=bucket,
     model_key = "model.tar.gz",
-    instance_type="ml.m5.large",
+    instance_type="ml.t2.medium", 
     region=region,
     role_arn=execution_role_arn
 ):
