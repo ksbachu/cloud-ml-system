@@ -6,6 +6,7 @@ import joblib
 import os
 import logging
 import watchtower
+import tarfile
 
 # Logger setup with CloudWatch
 logger = logging.getLogger(__name__)
@@ -33,8 +34,14 @@ def generate_and_train():
     model.fit(X, y)
 
     os.makedirs("model/output", exist_ok=True)
-    joblib.dump(model, "model/output/xgb_lead_model.pkl")
-    logger.info("Model saved to model/output/xgb_lead_model.pkl")
+    model_path = "model/output/xgb_lead_model.pkl"
+    joblib.dump(model, model_path)
+
+    tar_path = "model/output/xgb_lead_model.tar.gz"
+    with tarfile.open(tar_path, mode="w:gz") as archive:
+        archive.add(model_path, arcname="xgb_lead_model.pkl")
+
+    logger.info("✅ Model archive saved to model/output/xgb_lead_model.tar.gz")
 
 if __name__ == "__main__":
     generate_and_train()

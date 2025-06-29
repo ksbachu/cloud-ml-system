@@ -19,10 +19,10 @@ def ensure_bucket(bucket_name, region=region):
     else:
         logger.info(f"Bucket {bucket_name} already exists.")
 
-def upload_model(bucket_name=bucket_name, key="xgb_lead_model.pkl"):
+def upload_model(bucket_name=bucket_name, key="xgb_lead_model.tar.gz"):
     ensure_bucket(bucket_name)
     s3 = boto3.client("s3")
-    local_path = "model/output/xgb_lead_model.pkl"
+    local_path = "model/output/xgb_lead_model.tar.gz"
     if os.path.exists(local_path):
         s3.upload_file(local_path, bucket_name, key)
         logger.info(f"Model uploaded to s3://{bucket_name}/{key}")

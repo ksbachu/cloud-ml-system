@@ -15,7 +15,7 @@ region = os.getenv("AWS_REGION")
 def deploy_model(
     model_name="lead-scoring-xgb",
     bucket=bucket,
-    model_key="xgb_lead_model.pkl",
+    model_key = "xgb_lead_model.tar.gz",
     instance_type="ml.m5.large",
     region=region,
     role_arn=execution_role_arn
