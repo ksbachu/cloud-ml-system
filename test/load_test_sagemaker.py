@@ -1,24 +1,21 @@
-import boto3
+import requests
 import concurrent.futures
 import time
 import watchtower
 import logging
+import os
 
 # === Configuration ===
-ENDPOINT_NAME = "xgboostmodel-endpoint3"
-REGION = "us-east-1"
+API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
 N_REQUESTS = 300          # Total requests to send
 CONCURRENCY = 300         # Simulate 300 RPS
 LATENCY_THRESHOLD = 1.0   # seconds
-CLOUDWATCH_LOG_GROUP = "/ml/test-load"
+CLOUDWATCH_LOG_GROUP = "/ml/test-load-api"
 
 # === Logger Setup ===
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group=CLOUDWATCH_LOG_GROUP))
-
-# === SageMaker Client ===
-client = boto3.client("sagemaker-runtime", region_name=REGION)
 
 # === Generate 50 Feature CSV Payload ===
 def generate_payload():
@@ -27,17 +24,14 @@ def generate_payload():
 
 PAYLOAD = generate_payload()
 
-# === Invoke Endpoint Function with Latency Tracking ===
+# === Invoke API Gateway Endpoint with Latency Tracking ===
 def invoke_endpoint(i):
+    headers = {"Content-Type": "text/csv"}
     t1 = time.time()
-    response = client.invoke_endpoint(
-        EndpointName=ENDPOINT_NAME,
-        ContentType="text/csv",
-        Body=PAYLOAD
-    )
+    response = requests.post(API_GATEWAY_URL, data=PAYLOAD, headers=headers)
     t2 = time.time()
     latency = t2 - t1
-    result = response["Body"].read().decode()
+    result = response.text
     logger.info(f"Request {i+1} latency: {latency:.3f}s, response: {result}")
     return latency
 

@@ -42,7 +42,8 @@ jobs:
       SAGEMAKER_EXECUTION_ROLE_ARN: ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       SAGEMAKER_ENDPOINT_NAME: ${{ secrets.SAGEMAKER_ENDPOINT }}
-      TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT }} 
+      TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT }}
+      API_GATEWAY_URL: ${{ secrets.API_GATEWAY_URL }} 
     environment: ml-sagemaker-deploy
 
     steps:
@@ -90,7 +91,6 @@ jobs:
           terraform apply -auto-approve
 
       - name: Conditionally Load Test SageMaker Endpoint
-        if: needs.detect-changes.outputs.train == 'true'
         run: |
           echo "Running load test"
           python test/load_test_sagemaker.py
