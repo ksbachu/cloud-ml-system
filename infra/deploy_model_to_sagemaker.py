@@ -22,7 +22,7 @@ def deploy_model(
 
     model_data_url = f"s3://{bucket}/{model_key}"
     container = {
-        'Image': '683313688378.dkr.ecr.ap-south-1.amazonaws.com/xgboost:1.5-1',
+        'Image': '683313688378.dkr.ecr.ap-south-1.amazonaws.com/sagemaker-xgboost:1.5-1-cpu-py3',
         'ModelDataUrl': model_data_url
     }
 
