@@ -9,6 +9,8 @@ on:
 
 env:
   TF_DIR: terraform
+  TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+  TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT_NAME }}
 
 jobs:
   detect-changes:
@@ -28,6 +30,8 @@ jobs:
           filters: |
             train:
               - 'model/train_model.py'
+              - 'infra/**'
+              - 'terraform/**'
             smoke:
               - 'test/smoke_test_inference.py'
 
@@ -38,6 +42,8 @@ jobs:
       S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
       SAGEMAKER_EXECUTION_ROLE_ARN: ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
+      TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT_NAME }}
     environment: ml-sagemaker-deploy
 
     steps:
@@ -69,13 +75,6 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform init -reconfigure
 
-      - name: Terraform Apply
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          terraform apply -auto-approve \
-            -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
-            -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-
       - name: Conditionally Train and Deploy Model
         if: needs.detect-changes.outputs.train == 'true'
         run: |
@@ -83,6 +82,19 @@ jobs:
           python model/train_model.py
           python infra/upload_model_to_s3.py
           python infra/deploy_model_to_sagemaker.py
+
+      - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "Packaging Lambda function"
+          zip -r lambda_package.zip lambda/
+          terraform apply -auto-approve
+
+      - name: Conditionally Load Test SageMaker Endpoint
+        if: needs.detect-changes.outputs.train == 'true'
+        run: |
+          echo "Running load test"
+          python test/load_test_sagemaker.py
 
       - name: Conditionally Run Inference Smoke Test
         if: needs.detect-changes.outputs.smoke == 'true'

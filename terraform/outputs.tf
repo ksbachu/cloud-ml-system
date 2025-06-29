@@ -12,3 +12,8 @@ output "region" {
   description = "AWS region"
   value       = var.region
 }
+
+output "inference_api_url" {
+  value = aws_apigatewayv2_api.api.api_endpoint
+  description = "Public endpoint to trigger inference"
+}
