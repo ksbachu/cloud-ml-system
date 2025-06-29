@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.datasets import make_classification
 from xgboost import XGBClassifier
+import xgboost as xgb
 import joblib
 import os
 import logging
@@ -35,7 +36,8 @@ def generate_and_train():
 
     os.makedirs("model", exist_ok=True)
     model_path = "model/xgb_lead_model"
-    joblib.dump(model, model_path)
+    # joblib.dump(model, model_path)
+    model.save_model(model_path)
 
     # tar_path = "model/output/xgb_lead_model.tar.gz"
     # with tarfile.open(tar_path, mode="w:gz") as archive:
