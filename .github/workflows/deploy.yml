@@ -13,6 +13,11 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      SAGEMAKER_EXECUTION_ROLE_ARN: ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+     
     environment: ml-sagemaker-deploy  # Define GitHub Environment
 
     steps:
@@ -51,49 +56,14 @@ jobs:
           -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
           -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
     
-    - name: Debug Terraform Output
-      working-directory: ${{ env.TF_DIR }}
-      run: |
-        terraform output -json
-    - name: Use Outputs
-      working-directory: ${{ env.TF_DIR }}
-      run: |
-        echo "Bucket: $S3_BUCKET_NAME"
-        echo "Role: $SAGEMAKER_EXECUTION_ROLE_ARN"
-        echo "Region: $AWS_REGION"
-    - name: Export Terraform Outputs to ENV
-      working-directory: ${{ env.TF_DIR }}
-      shell: bash
-      run: |
-        BUCKET=$(terraform output -raw s3_bucket_name 2>/dev/null | tr -d '\r')
-        ROLE=$(terraform output -raw sagemaker_execution_role_arn 2>/dev/null | tr -d '\r')
-        REGION=$(terraform output -raw region 2>/dev/null | tr -d '\r')
+    - name: Train Model
+      run: python model/train_model.py
 
-        echo "S3_BUCKET_NAME=$BUCKET" >> $GITHUB_ENV
-        echo "SAGEMAKER_EXECUTION_ROLE_ARN=$ROLE" >> $GITHUB_ENV
-        echo "AWS_REGION=$REGION" >> $GITHUB_ENV
+    - name: Upload Model to S3
+      run: python infra/upload_model_to_s3.py
 
-        # Debug print for this step only
-        echo "Sanity Check in Export Step:"
-        echo "Bucket: $BUCKET"
-        echo "Role: $ROLE"
-        echo "Region: $REGION"
-    - name: Print Exported Environment Variables
-      run: |
-        echo "Bucket: $S3_BUCKET_NAME"
-        echo "Role: $SAGEMAKER_EXECUTION_ROLE_ARN"
-        echo "Region: $AWS_REGION"
+    - name: Deploy Model to SageMaker
+      run: python infra/deploy_model_to_sagemaker.py
 
-
-
-    # - name: Train Model
-    #   run: python model/train_model.py
-
-    # - name: Upload Model to S3
-    #   run: python infra/upload_model_to_s3.py
-
-    # - name: Deploy Model to SageMaker
-    #   run: python infra/deploy_model_to_sagemaker.py
-
-    # - name: Inference Smoke Test
-    #   run: python test/smoke_test_inference.py
+    - name: Inference Smoke Test
+      run: python test/smoke_test_inference.py
