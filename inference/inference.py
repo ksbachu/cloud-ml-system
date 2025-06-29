@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/inference"))
 
 # Set your endpoint name here
-ENDPOINT_NAME = "lead-scoring-xgb-endpoint"
+ENDPOINT_NAME = "lead-scoring-xgb-endpoint2"
 REGION = os.getenv("AWS_REGION")
 
 # Create SageMaker runtime client

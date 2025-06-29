@@ -2,7 +2,7 @@ import boto3
 import json
 import os
 
-endpoint_name = os.getenv("SAGEMAKER_ENDPOINT_NAME", "lead-scoring-xgb-endpoint")
+endpoint_name = os.getenv("SAGEMAKER_ENDPOINT_NAME", "lead-scoring-xgb-endpoint2")
 region = os.getenv("AWS_REGION")
 
 runtime = boto3.client("sagemaker-runtime", region_name=region)
