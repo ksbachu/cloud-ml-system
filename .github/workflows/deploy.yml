@@ -41,8 +41,7 @@ jobs:
       S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
       SAGEMAKER_EXECUTION_ROLE_ARN: ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
-      TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT_NAME }}
+      sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT_NAME }}
     environment: ml-sagemaker-deploy
 
     steps:
