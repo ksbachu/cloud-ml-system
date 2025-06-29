@@ -32,16 +32,17 @@ def generate_and_train():
     model.fit(X, y)
 
     os.makedirs("model", exist_ok=True)
-    model_path = "model/xgb_lead_model"
+    model_path = os.path.join("model", "xgb_lead_model")
 
-    # Save the model in XGBoost's native binary format
+    # Save XGBoost native model format (not pickle)
     model.save_model(model_path)
-    logger.info(f"Model saved to {model_path}")
+    logger.info(f"Model saved at {model_path}")
 
-    # Create a tar.gz archive with the model file (not folder)
+    # Create tar.gz with only the model file (no folders)
     archive_path = "model/model.tar.gz"
     with tarfile.open(archive_path, "w:gz") as tar:
-        tar.add(model_path, arcname="xgb_lead_model")
+        # Fix: Use arcname to prevent "model/" prefix
+        tar.add(model_path, arcname=os.path.basename(model_path))
 
     logger.info(f"Model archive created at {archive_path}")
 
