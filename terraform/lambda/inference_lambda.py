@@ -4,7 +4,6 @@ import time
 import os
 import logging
 import watchtower
-
 # Logger setup
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
