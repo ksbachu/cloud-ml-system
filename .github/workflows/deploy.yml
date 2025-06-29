@@ -62,8 +62,8 @@ jobs:
     - name: Upload Model to S3
       run: python infra/upload_model_to_s3.py
 
-    - name: Deploy Model to SageMaker
-      run: python infra/deploy_model_to_sagemaker.py
+    # - name: Deploy Model to SageMaker
+    #   run: python infra/deploy_model_to_sagemaker.py
 
-    - name: Inference Smoke Test
-      run: python test/smoke_test_inference.py
+    # - name: Inference Smoke Test
+    #   run: python test/smoke_test_inference.py

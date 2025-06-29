@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.datasets import make_classification
 from xgboost import XGBClassifier
-import xgboost as xgb
-import joblib
 import os
 import logging
 import watchtower
@@ -13,7 +11,6 @@ import tarfile
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/train-model"))
-
 
 def generate_and_train():
     logger.info("Generating synthetic dataset...")
@@ -36,16 +33,17 @@ def generate_and_train():
 
     os.makedirs("model", exist_ok=True)
     model_path = "model/xgb_lead_model"
-    # joblib.dump(model, model_path)
+
+    # Save the model in XGBoost's native binary format
     model.save_model(model_path)
+    logger.info(f"Model saved to {model_path}")
 
-    # tar_path = "model/output/xgb_lead_model.tar.gz"
-    # with tarfile.open(tar_path, mode="w:gz") as archive:
-    #     archive.add(model_path, arcname="xgb_lead_model.pkl")
-    with tarfile.open("model/model.tar.gz", "w:gz") as tar:
-        tar.add("model/xgb_lead_model", arcname="xgb_lead_model")
+    # Create a tar.gz archive with the model file (not folder)
+    archive_path = "model/model.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as tar:
+        tar.add(model_path, arcname="xgb_lead_model")
 
-    logger.info("Model archive saved")
+    logger.info(f"Model archive created at {archive_path}")
 
 if __name__ == "__main__":
     generate_and_train()
