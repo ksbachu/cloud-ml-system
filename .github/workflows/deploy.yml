@@ -9,8 +9,6 @@ on:
 
 env:
   TF_DIR: terraform
-  TF_VAR_bucket_name: ${{ secrets.S3_BUCKET_NAME }}
-  TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT }}
 
 jobs:
   detect-changes:
@@ -38,12 +36,7 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     env:
-      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-      SAGEMAKER_EXECUTION_ROLE_ARN: ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      SAGEMAKER_ENDPOINT_NAME: ${{ secrets.SAGEMAKER_ENDPOINT }}
-      TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT }}
-      API_GATEWAY_URL: ${{ secrets.API_GATEWAY_URL }} 
     environment: ml-sagemaker-deploy
 
     steps:
@@ -74,6 +67,13 @@ jobs:
       - name: Terraform Init with S3 Backend
         working-directory: ${{ env.TF_DIR }}
         run: terraform init -reconfigure
+
+      - name: Extract Terraform Outputs to Env Vars
+        run: |
+          echo "Exporting TF outputs"
+          echo "API_GATEWAY_URL=$(terraform output -raw inference_api_url)" >> $GITHUB_ENV
+          echo "SAGEMAKER_ENDPOINT_NAME=$(terraform output -raw sagemaker_endpoint_name)" >> $GITHUB_ENV
+          echo "S3_BUCKET=$(terraform output -raw s3_bucket_name)" >> $GITHUB_ENV
 
       - name: Conditionally Train and Deploy Model
         run: |
