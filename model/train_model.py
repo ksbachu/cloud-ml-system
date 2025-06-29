@@ -22,7 +22,6 @@ def generate_and_train():
         n_classes=5,
         random_state=42
     )
-    y = y + 1
 
     logger.info("Training XGBoost model...")
     model = XGBClassifier(
