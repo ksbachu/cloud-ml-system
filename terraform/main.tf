@@ -97,8 +97,8 @@ resource "aws_iam_role_policy_attachment" "lambda_custom_attach" {
 # Lambda function
 resource "aws_lambda_function" "inference" {
   function_name = "inference-handler"
-  filename         = "${path.module}/../lambda_package.zip"
-  source_code_hash = filebase64sha256("${path.module}/../lambda_package.zip")
+  filename         = "${path.module}/lambda_package.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_package.zip")
   handler          = "inference_lambda.lambda_handler"
   runtime          = "python3.10"
   role             = aws_iam_role.lambda_role.arn
