@@ -33,15 +33,17 @@ def generate_and_train():
     )
     model.fit(X, y)
 
-    os.makedirs("model/output", exist_ok=True)
-    model_path = "model/output/xgb_lead_model.pkl"
+    os.makedirs("model", exist_ok=True)
+    model_path = "model/xgb_lead_model"
     joblib.dump(model, model_path)
 
-    tar_path = "model/output/xgb_lead_model.tar.gz"
-    with tarfile.open(tar_path, mode="w:gz") as archive:
-        archive.add(model_path, arcname="xgb_lead_model.pkl")
+    # tar_path = "model/output/xgb_lead_model.tar.gz"
+    # with tarfile.open(tar_path, mode="w:gz") as archive:
+    #     archive.add(model_path, arcname="xgb_lead_model.pkl")
+    with tarfile.open("model/model.tar.gz", "w:gz") as tar:
+        tar.add("model/xgb_lead_model", arcname="xgb_lead_model")
 
-    logger.info("✅ Model archive saved to model/output/xgb_lead_model.tar.gz")
+    logger.info("Model archive saved")
 
 if __name__ == "__main__":
     generate_and_train()

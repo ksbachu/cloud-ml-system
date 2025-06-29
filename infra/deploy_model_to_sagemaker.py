@@ -15,7 +15,7 @@ region = os.getenv("AWS_REGION")
 def deploy_model(
     model_name="lead-scoring-xgb",
     bucket=bucket,
-    model_key = "xgb_lead_model.tar.gz",
+    model_key = "model.tar.gz",
     instance_type="ml.m5.large",
     region=region,
     role_arn=execution_role_arn
@@ -23,6 +23,7 @@ def deploy_model(
     sagemaker = boto3.client("sagemaker", region_name=region)
 
     model_data_url = f"s3://{bucket}/{model_key}"
+    # model_data_url = f"s3://{bucket}/model.tar.gz"
 
     # ✅ This retrieves the official public SageMaker image URI
     container_image = image_uris.retrieve(
