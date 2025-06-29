@@ -13,7 +13,7 @@ bucket = os.getenv("S3_BUCKET")
 region = os.getenv("AWS_REGION")
 
 def deploy_model(
-    model_name="lead-scoring-xgb",
+    model_name="xgboostmodel",
     bucket=bucket,
     model_key = "model.tar.gz",
     instance_type="ml.t2.medium", 
@@ -59,18 +59,18 @@ def deploy_model(
 
     logger.info("Creating endpoint...")
     sagemaker.create_endpoint(
-        EndpointName=model_name + "-endpoint2",
+        EndpointName=model_name + "-endpoint3",
         EndpointConfigName=model_name + "-config"
     )
 
     try:
         logger.info("Waiting for endpoint to be InService...")
         waiter = sagemaker.get_waiter('endpoint_in_service')
-        waiter.wait(EndpointName=model_name + "-endpoint2")
-        logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint2")
+        waiter.wait(EndpointName=model_name + "-endpoint3")
+        logger.info(f"✅ Endpoint is deployed and InService: {model_name}-endpoint3")
     except Exception as e:
         logger.error("Endpoint creation failed.")
-        response = sagemaker.describe_endpoint(EndpointName=model_name + "-endpoint2")
+        response = sagemaker.describe_endpoint(EndpointName=model_name + "-endpoint3")
         logger.error(f"Endpoint status: {response['EndpointStatus']}")
         logger.error(f"📄 Failure reason: {response.get('FailureReason', 'No detailed reason provided')}")
         raise

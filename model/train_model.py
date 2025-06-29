@@ -6,7 +6,7 @@ import os
 import logging
 import watchtower
 import tarfile
-import joblib
+
 # Logger setup with CloudWatch
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -32,15 +32,17 @@ def generate_and_train():
     model.fit(X, y)
 
     os.makedirs("model", exist_ok=True)
-    model_path = "model/xgb_lead_model.bst"
 
-    # ✅ Save as Pickle file
-    joblib.dump(model, model_path)
-    logger.info(f"Model pickled at: {model_path}")
+    # ✅ Valid SageMaker model filename (no dots, no underscores)
+    model_file_name = "xgboostmodel"  # must match regex ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$
 
-    # ✅ Archive as model.tar.gz with only the .pkl inside
+    # ✅ Save model using booster.save_model
+    model.get_booster().save_model(f"model/{model_file_name}")
+    logger.info(f"Model saved in XGBoost binary format at: model/{model_file_name}")
+
+    # ✅ Tar it with correct internal file name
     with tarfile.open("model/model.tar.gz", "w:gz") as tar:
-        tar.add(model_path, arcname="xgb_lead_model")
+        tar.add(f"model/{model_file_name}", arcname=model_file_name)
 
     logger.info("Model archive created at model/model.tar.gz")
 
