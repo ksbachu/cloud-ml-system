@@ -24,7 +24,7 @@ def generate_and_train():
 
     logger.info("Training XGBoost model...")
     model = XGBClassifier(
-        objective='multi:softprob',
+        objective='multi:softmax',
         num_class=5,
         eval_metric='mlogloss',
         use_label_encoder=False

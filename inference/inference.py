@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/inference"))
 
 # Set your endpoint name here
-ENDPOINT_NAME = "lead-scoring-xgb-endpoint2"
+ENDPOINT_NAME = "xgboostmodel-endpoint"
 REGION = os.getenv("AWS_REGION")
 
 # Create SageMaker runtime client
@@ -36,6 +36,8 @@ def generate_test_payload(num_samples=1, num_features=50):
 
 if __name__ == "__main__":
     logger.info("Starting inference test")
-    test_payload = generate_test_payload(num_samples=3)
+    test_payload = generate_test_payload(num_samples=5)
     result = invoke_endpoint(test_payload)
-    logger.info(f"Predicted class probabilities: {result}")
+    # Convert 0-based class label to 1-based lead score
+    lead_scores = [int(pred) + 1 for pred in result]
+    logger.info(f"Lead Scores (1-5): {lead_scores}")
