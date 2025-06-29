@@ -9,6 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/lambda-inference"))
 
+
 sagemaker = boto3.client("sagemaker-runtime", region_name=os.getenv("AWS_REGION"))
 s3 = boto3.client("s3")
 
