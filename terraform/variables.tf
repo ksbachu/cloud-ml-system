@@ -1,6 +1,4 @@
-variable "bucket_name" {
-  default = "cloud-ml-lead-scoring-models"
-}
+
 
 variable "region" {
   default = "us-east-1"
