@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     bucket = "cloud-ml-terraform-state"        
     key    = "sagemaker/model-deployment.tfstate"
-    region = "ap-south-1"
+    region = "us-east-1"
     encrypt = true
   }
 }
