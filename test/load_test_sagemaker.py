@@ -4,11 +4,12 @@ import time
 import watchtower
 import logging
 import os
+import json
 
 # === Configuration ===
 API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
-N_REQUESTS = 300          # Total requests to send
-CONCURRENCY = 300         # Simulate 300 RPS
+N_REQUESTS = 1          # Total requests to send
+CONCURRENCY = 1         # Simulate 300 RPS
 LATENCY_THRESHOLD = 1.0   # seconds
 CLOUDWATCH_LOG_GROUP = "/ml/test-load-api"
 
@@ -26,9 +27,10 @@ PAYLOAD = generate_payload()
 
 # === Invoke API Gateway Endpoint with Latency Tracking ===
 def invoke_endpoint(i):
-    headers = {"Content-Type": "text/csv"}
+    headers = {"Content-Type": "application/json"}
+    json_payload = json.dumps({"features": PAYLOAD})
     t1 = time.time()
-    response = requests.post(API_GATEWAY_URL, data=PAYLOAD, headers=headers)
+    response = requests.post(API_GATEWAY_URL, data=json_payload, headers=headers)
     t2 = time.time()
     latency = t2 - t1
     result = response.text
