@@ -76,7 +76,6 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Conditionally Train and Deploy Model
-        if: needs.detect-changes.outputs.train == 'true'
         run: |
           echo "Training and deploying model due to changes in train_model.py"
           python model/train_model.py
