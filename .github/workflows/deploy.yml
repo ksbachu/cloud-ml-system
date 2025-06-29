@@ -87,7 +87,7 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: |
           echo "Packaging Lambda function"
-          zip ../lambda_package.zip ../lambda/inference_lambda.py
+          zip lambda_package.zip ../lambda/inference_lambda.py -j
           terraform apply -auto-approve
 
       - name: Conditionally Load Test SageMaker Endpoint
