@@ -31,7 +31,6 @@ jobs:
             train:
               - 'model/train_model.py'
               - 'infra/**'
-              - 'terraform/**'
             smoke:
               - 'test/smoke_test_inference.py'
 
