@@ -87,6 +87,7 @@ resource "aws_iam_policy" "lambda_custom" {
   })
 }
 
+
 # Attach custom policy
 resource "aws_iam_role_policy_attachment" "lambda_custom_attach" {
   role       = aws_iam_role.lambda_role.name
