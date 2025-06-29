@@ -93,7 +93,6 @@ resource "aws_iam_role_policy_attachment" "lambda_custom_attach" {
   policy_arn = aws_iam_policy.lambda_custom.arn
 }
 
-
 # Lambda function
 resource "aws_lambda_function" "inference" {
   function_name = "inference-handler"
