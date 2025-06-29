@@ -1,8 +1,2 @@
 boto3
-joblib
-xgboost==1.5.1
-scikit-learn
-pandas
-numpy
 watchtower
-sagemaker
