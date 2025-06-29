@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/inference"))
 
 # Set your endpoint name here
-ENDPOINT_NAME = "xgboostmodel-endpoint"
+ENDPOINT_NAME = "xgboostmodel-endpoint3"
 REGION = os.getenv("AWS_REGION")
 
 # Create SageMaker runtime client
