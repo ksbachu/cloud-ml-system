@@ -86,8 +86,14 @@ jobs:
       - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
         working-directory: ${{ env.TF_DIR }}
         run: |
-          echo "Packaging Lambda function"
-          zip lambda_package.zip ../lambda/inference_lambda.py -j
+          echo "Packaging Lambda function with dependencies"
+          mkdir -p ../build
+          pip install -r ../lambda/requirements.txt -t ../build/
+          cp ../lambda/inference_lambda.py ../build/
+          cd ../build
+          zip -r ../lambda_package.zip .
+          mv ../lambda_package.zip ../terraform/
+          cd ../terraform
           terraform apply -auto-approve
 
       - name: Conditionally Load Test SageMaker Endpoint
