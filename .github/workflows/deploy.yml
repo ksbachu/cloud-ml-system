@@ -68,12 +68,12 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: terraform init -reconfigure
 
-      - name: Extract Terraform Outputs to Env Vars
+      - name: Export Terraform outputs to GitHub Actions env
+        working-directory: ${{ env.TF_DIR }}
         run: |
-          echo "Exporting TF outputs"
-          echo "API_GATEWAY_URL=$(terraform output -raw inference_api_url)" >> $GITHUB_ENV
-          echo "SAGEMAKER_ENDPOINT_NAME=$(terraform output -raw sagemaker_endpoint_name)" >> $GITHUB_ENV
           echo "S3_BUCKET=$(terraform output -raw s3_bucket_name)" >> $GITHUB_ENV
+          echo "SAGEMAKER_ENDPOINT_NAME=$(terraform output -raw sagemaker_endpoint_name)" >> $GITHUB_ENV
+          echo "API_GATEWAY_URL=$(terraform output -raw inference_api_url)" >> $GITHUB_ENV
 
       - name: Conditionally Train and Deploy Model
         run: |
