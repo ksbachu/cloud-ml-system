@@ -111,6 +111,7 @@ resource "aws_lambda_function" "inference" {
 }
 
 
+
 # API Gateway (HTTP API)
 resource "aws_apigatewayv2_api" "api" {
   name          = "inference-api"
