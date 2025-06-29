@@ -81,7 +81,6 @@ jobs:
           echo "Training and deploying model due to changes in train_model.py"
           python model/train_model.py
           python infra/upload_model_to_s3.py
-          python infra/deploy_model_to_sagemaker.py
 
       - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
         working-directory: ${{ env.TF_DIR }}

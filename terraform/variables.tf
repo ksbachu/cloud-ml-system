@@ -24,3 +24,4 @@ variable "sagemaker_endpoint" {
   description = "Name of the deployed SageMaker endpoint"
   default     = "xgboostmodel-endpoint3"
 }
+

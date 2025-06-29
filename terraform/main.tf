@@ -106,8 +106,8 @@ resource "aws_lambda_function" "inference" {
 
   environment {
     variables = {
-      SAGEMAKER_ENDPOINT_NAME = var.sagemaker_endpoint
-      S3_BUCKET               = var.bucket_name
+      SAGEMAKER_ENDPOINT_NAME = aws_sagemaker_endpoint.xgboost_endpoint.name
+      S3_BUCKET               = aws_s3_bucket.model_bucket.bucket
     }
   }
 }
@@ -145,4 +145,38 @@ resource "aws_lambda_permission" "api_gateway_permission" {
   function_name = aws_lambda_function.inference.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+# -----------------------------
+# SageMaker Model Deployment
+# -----------------------------
+
+# SageMaker model using XGBoost container
+resource "aws_sagemaker_model" "xgboost_model" {
+  name               = "xgboostmodel"
+  execution_role_arn = aws_iam_role.sagemaker_execution_role.arn
+
+  primary_container {
+    image          = "683313688378.dkr.ecr.${var.region}.amazonaws.com/sagemaker-xgboost:1.7-1"
+    model_data_url = "s3://${aws_s3_bucket.model_bucket.bucket}/model.tar.gz"
+  }
+}
+
+# SageMaker Endpoint Configuration
+resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
+  name = "xgboostmodel-config"
+
+  production_variants {
+    variant_name           = "AllTraffic"
+    model_name             = aws_sagemaker_model.xgboost_model.name
+    initial_instance_count = 1
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+}
+
+# SageMaker Endpoint
+resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
+  name                 = "xgboostmodel-endpoint3"
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.xgboost_endpoint_config.name
 }
