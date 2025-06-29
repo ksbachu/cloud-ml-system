@@ -7,8 +7,9 @@ import watchtower
 # Logger setup
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/lambda-inference"))
-
+# logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/lambda-inference"))
+if not logger.handlers:
+    logger.addHandler(logging.StreamHandler())
 
 sagemaker = boto3.client("sagemaker-runtime", region_name=os.getenv("AWS_REGION"))
 s3 = boto3.client("s3")
@@ -17,6 +18,7 @@ ENDPOINT_NAME = os.getenv("SAGEMAKER_ENDPOINT_NAME")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
 def lambda_handler(event, context):
+    logger.info("Received event: %s", json.dumps(event))
     try:
         body = json.loads(event["body"])
         features = body.get("features")
