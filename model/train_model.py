@@ -45,7 +45,7 @@ def generate_and_train():
         n_features=50,
         n_informative=30,
         n_classes=5,
-        random_state=43
+        random_state=42
     )
 
     train_logger.info("Splitting dataset into train and validation sets...")
