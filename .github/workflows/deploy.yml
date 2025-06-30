@@ -5,7 +5,21 @@ on:
     branches:
       - main
       - feature/*
+    paths-ignore:
+      - '.github/workflows/**'
   workflow_dispatch:
+    inputs:
+      action_type:
+        description: 'Select the action to perform'
+        required: true
+        default: 'Retrain'
+        type: choice
+        options:
+          - Retrain
+          - Update Inference API
+      branch_name:
+        description: 'Branch name to deploy (optional)'
+        required: false
 
 env:
   TF_DIR: terraform
@@ -30,9 +44,6 @@ jobs:
           filters: |
             train:
               - 'model/train_model.py'
-            smoke:
-              - 'test/smoke_test_inference.py'
-
   deploy:
     needs: detect-changes
     runs-on: ubuntu-latest
@@ -75,12 +86,12 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Conditionally Train and Deploy Model
-        if: needs.detect-changes.outputs.train == 'true'
+        if: ${{ github.event.inputs.action_type == 'Retrain' || needs.detect-changes.outputs.train == 'true' }}
         run: |
           echo "Training and uploading new model..."
           python model/train_model.py
 
-          
+
       - name: Get Latest Model from S3
         run: |
           BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
@@ -131,14 +142,16 @@ jobs:
           echo "Version suffix: $TF_VAR_model_version_suffix"
           export TF_VAR_sagemaker_endpoint_name=$endpoint_name
           terraform apply -auto-approve
+      
+      - name: Run Inference Smoke Test
+        run: |
+          echo "Running smoke_test_inference.py"
+          python test/smoke_test_inference.py
 
       - name: Conditionally Load Test SageMaker Endpoint
+        if: ${{ github.event.inputs.action_type == 'Retrain' || needs.detect-changes.outputs.train == 'true' }}
         run: |
           echo "Running load test"
           python test/load_test_sagemaker.py
 
-      - name: Conditionally Run Inference Smoke Test
-        if: needs.detect-changes.outputs.smoke == 'true'
-        run: |
-          echo "Running smoke test due to changes in smoke_test_inference.py"
-          python test/smoke_test_inference.py
+      
