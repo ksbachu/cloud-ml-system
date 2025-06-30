@@ -25,17 +25,17 @@ AWS_REGION = os.environ.get("AWS_REGION")  # Optional region fallback
 train_logger = logging.getLogger("train")
 train_logger.setLevel(logging.INFO)
 train_logger.addHandler(watchtower.CloudWatchLogHandler(
-    log_group="/ml/train", stream_name="trainer", create_log_group=True, boto3_session=boto3.Session(region_name=AWS_REGION)))
+    log_group="/ml/train", stream_name="trainer", create_log_group=True))
 
 val_logger = logging.getLogger("validation")
 val_logger.setLevel(logging.INFO)
 val_logger.addHandler(watchtower.CloudWatchLogHandler(
-    log_group="/ml/validation", stream_name="validator", create_log_group=True, boto3_session=boto3.Session(region_name=AWS_REGION)))
+    log_group="/ml/validation", stream_name="validator", create_log_group=True))
 
 impact_logger = logging.getLogger("impact")
 impact_logger.setLevel(logging.INFO)
 impact_logger.addHandler(watchtower.CloudWatchLogHandler(
-    log_group="/ml/impact_analysis", stream_name="impact", create_log_group=True, boto3_session=boto3.Session(region_name=AWS_REGION)))
+    log_group="/ml/impact_analysis", stream_name="impact", create_log_group=True))
 
 
 def generate_and_train():
