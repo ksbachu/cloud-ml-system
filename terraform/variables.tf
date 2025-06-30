@@ -25,3 +25,7 @@ variable "sagemaker_endpoint" {
   default     = "xgboostmodel-endpoint3"
 }
 
+variable "model_data_url" {
+  description = "The S3 path to the model artifact"
+  type        = string
+}

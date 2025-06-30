@@ -18,6 +18,7 @@ logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/train-model"))
 s3 = boto3.client("s3")
 S3_BUCKET = os.environ.get("S3_BUCKET")  # ensure this is set in environment
 
+
 def generate_and_train():
     logger.info("Generating synthetic dataset...")
     X, y = make_classification(
