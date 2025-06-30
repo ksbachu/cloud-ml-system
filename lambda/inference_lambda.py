@@ -20,6 +20,7 @@ s3 = boto3.client("s3")
 ENDPOINT_NAME = os.getenv("SAGEMAKER_ENDPOINT_NAME")
 S3_BUCKET = os.getenv("S3_BUCKET")
 
+
 # === Lambda Handler ===
 def lambda_handler(event, context):
     logger.info("Received event: %s", json.dumps(event))
