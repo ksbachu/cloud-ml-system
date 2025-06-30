@@ -92,10 +92,16 @@ jobs:
             --bucket "$BUCKET_NAME" \
             --prefix "$PREFIX" \
             --query 'sort_by(Contents, &LastModified)[-1].Key' \
-            --output text)
+            --output text | grep '\.tar\.gz$' | tail -n 1)
+
+          if [ -z "$latest_model" ]; then
+            echo "ERROR: No .tar.gz model file found in S3."
+            exit 1
+          fi
 
           echo "TF_VAR_model_data_url=s3://$BUCKET_NAME/$latest_model" >> tf_env_vars.sh
           echo "TF_VAR_model_version_suffix=${GITHUB_RUN_ID}" >> tf_env_vars.sh
+
       - name: Deploy Terraform
         working-directory: ${{ env.TF_DIR }}
         run: |
@@ -108,13 +114,15 @@ jobs:
           mv ../lambda_package.zip ../terraform/
           cd ../terraform
 
-          # Load TF_VAR_ environment variables
           if [ -f ../tf_env_vars.sh ]; then
             source ../tf_env_vars.sh
+          else
+            echo "ERROR: tf_env_vars.sh not found!"
+            exit 1
           fi
-
-          # Now Terraform will automatically pick up TF_VAR_* environment variables
+          echo "Model path: $TF_VAR_model_data_url"
           terraform apply -auto-approve
+
 
 
       - name: Conditionally Load Test SageMaker Endpoint
