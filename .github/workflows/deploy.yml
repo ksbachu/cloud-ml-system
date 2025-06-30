@@ -30,7 +30,6 @@ jobs:
           filters: |
             train:
               - 'model/train_model.py'
-              - 'terraform/**'
             smoke:
               - 'test/smoke_test_inference.py'
 
@@ -81,6 +80,7 @@ jobs:
           echo "Training and uploading new model..."
           python model/train_model.py
 
+          
       - name: Get Latest Model from S3
         run: |
           BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
@@ -131,9 +131,6 @@ jobs:
           echo "Version suffix: $TF_VAR_model_version_suffix"
           export TF_VAR_sagemaker_endpoint_name=$endpoint_name
           terraform apply -auto-approve
-
-
-
 
       - name: Conditionally Load Test SageMaker Endpoint
         run: |
