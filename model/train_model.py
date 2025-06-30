@@ -37,6 +37,7 @@ def generate_and_train():
     )
     model.fit(X, y)
 
+
     # Create versioned model directory
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     model_dir = f"model/{timestamp}"
