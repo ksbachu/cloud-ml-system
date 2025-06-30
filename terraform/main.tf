@@ -209,20 +209,19 @@ resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
     managed_by  = "terraform"
     version     = var.model_version_suffix
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
-  name                 = "xgboostmodel-endpoint-${var.model_version_suffix}"
+  name                 = "xgboostmodel-endpoint"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.xgboost_endpoint_config.name
 
   tags = {
     project     = var.project
     environment = var.environment
     managed_by  = "terraform"
-    version     = var.model_version_suffix
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
 }
