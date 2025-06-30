@@ -158,7 +158,7 @@ resource "aws_sagemaker_model" "xgboost_model" {
 
   primary_container {
     image          = "683313688378.dkr.ecr.${var.region}.amazonaws.com/sagemaker-xgboost:1.7-1"
-    model_data_url = "s3://${aws_s3_bucket.model_bucket.bucket}/model.tar.gz"
+    model_data_url = "s3://${aws_s3_bucket.model_bucket.bucket}/models/model.tar.gz"
   }
 }
 

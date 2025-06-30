@@ -19,7 +19,7 @@ def ensure_bucket(bucket_name, region=region):
     else:
         logger.info(f"Bucket {bucket_name} already exists.")
 
-def upload_model(bucket_name=bucket_name, key="model.tar.gz"):
+def upload_model(bucket_name=bucket_name, key="models/model.tar.gz"):
     ensure_bucket(bucket_name)
     s3 = boto3.client("s3")
     local_path = "model/model.tar.gz"
