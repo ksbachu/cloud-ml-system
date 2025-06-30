@@ -90,7 +90,6 @@ def generate_and_train():
         json.dump(metrics, f, indent=4)
     val_logger.info(f"Saved metrics to {metrics_path}")
 
-    
     # Save model
     model_file_name = "xgboostmodel"
     model_path = f"{model_dir}/{model_file_name}"
