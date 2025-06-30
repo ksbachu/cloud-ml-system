@@ -100,7 +100,7 @@ jobs:
 
           echo "TF_VAR_model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
           echo "TF_VAR_model_version_suffix=${GITHUB_RUN_ID}" >> $GITHUB_ENV
-
+          echo "endpoint_name=xgboostmodel-endpoint-${GITHUB_RUN_ID}" >> $GITHUB_ENV
 
       - name: Deploy Terraform
         working-directory: ${{ env.TF_DIR }}
@@ -116,7 +116,7 @@ jobs:
 
           echo "Model path: $TF_VAR_model_data_url"
           echo "Version suffix: $TF_VAR_model_version_suffix"
-
+          export TF_VAR_sagemaker_endpoint_name=$endpoint_name
           terraform apply -auto-approve
 
 

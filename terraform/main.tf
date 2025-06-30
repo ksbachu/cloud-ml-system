@@ -211,7 +211,7 @@ resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
 }
 
 resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
-  name                 = "xgboostmodel-endpoint3"
+  name                 = "xgboostmodel-endpoint-${var.model_version_suffix}"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.xgboost_endpoint_config.name
 
   tags = {
@@ -222,7 +222,6 @@ resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
   }
 
   lifecycle {
-    create_before_destroy = false
+    create_before_destroy = true
   }
-  depends_on = [aws_sagemaker_endpoint_configuration.xgboost_endpoint_config]
 }
