@@ -222,6 +222,7 @@ resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
   }
 
   lifecycle {
-    create_before_destroy = true
+    create_before_destroy = false
   }
+  depends_on = [aws_sagemaker_endpoint_configuration.xgboost_endpoint_config]
 }
