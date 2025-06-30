@@ -14,7 +14,7 @@ logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/test-smoke"))
 # region = os.getenv("AWS_REGION", "us-east-1")
 # runtime = session.client("sagemaker-runtime", region_name=region)
 
-endpoint_name = os.getenv("SAGEMAKER_ENDPOINT_NAME", "xgboostmodel-endpoint3")
+endpoint_name = os.getenv("SAGEMAKER_ENDPOINT_NAME", "xgboostmodel-endpoint")
 region = os.getenv("AWS_REGION", "us-east-1")
 runtime = boto3.client("sagemaker-runtime", region_name=region)
 # Dummy input - 50 features
