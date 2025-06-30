@@ -85,60 +85,63 @@ jobs:
         run: |
           BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
           PREFIX=models/
-          echo "Listing contents of s3://$BUCKET_NAME/$PREFIX"
-          aws s3 ls s3://$BUCKET_NAME/$PREFIX --recursive
-          # latest_model=$(aws s3api list-objects-v2 \
-          #   --bucket "$BUCKET_NAME" \
-          #   --prefix "$PREFIX" \
-          #   --query 'sort_by(Contents, &LastModified)[-1].Key' \
-          #   --output text | grep '\.tar\.gz$' | tail -n 1)
 
-          # if [ -z "$latest_model" ]; then
-          #   echo "ERROR: No .tar.gz model file found in S3."
-          #   exit 1
-          # fi
-          # # Extract version from filename
-          # filename=$(basename "$latest_model")
-          # # e.g., from "xgboost_model_20250630_123045.tar.gz" extract "20250630_123045"
-          # version_suffix=$(echo "$filename" | grep -oP '\d{8}_\d{6}')
+          # List all model.tar.gz files recursively, sort by LastModified, get the latest
+          latest_model=$(aws s3api list-objects-v2 \
+            --bucket "$BUCKET_NAME" \
+            --prefix "$PREFIX" \
+            --query 'sort_by(Contents, &LastModified)[?ends_with(Key, `model.tar.gz`)] | [-1].Key' \
+            --output text)
 
-          # if [ -z "$version_suffix" ]; then
-          #   echo "ERROR: Could not extract version suffix from model filename: $filename"
-          #   exit 1
-          # fi
+          if [ -z "$latest_model" ]; then
+            echo "ERROR: No model.tar.gz file found in S3 under $PREFIX"
+            exit 1
+          fi
 
-          # # Export to GitHub environment
-          # echo "TF_VAR_model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
-          # echo "TF_VAR_model_version_suffix=${version_suffix}" >> $GITHUB_ENV
-          # echo "endpoint_name=xgboostmodel-endpoint-${version_suffix}" >> $GITHUB_ENV
+          echo "Found latest model file: $latest_model"
 
-      # - name: Deploy Terraform
-      #   working-directory: ${{ env.TF_DIR }}
-      #   run: |
-      #     echo "Packaging Lambda function with dependencies"
-      #     mkdir -p ../build
-      #     pip install -r ../lambda/requirements.txt -t ../build/
-      #     cp ../lambda/inference_lambda.py ../build/
-      #     cd ../build
-      #     zip -r ../lambda_package.zip .
-      #     mv ../lambda_package.zip ../terraform/
-      #     cd ../terraform
+          # Extract version from folder name e.g., xgboostmodel_20250630093229
+          version_suffix=$(echo "$latest_model" | grep -oP 'xgboostmodel_\d{14}' | grep -oP '\d{14}')
 
-      #     echo "Model path: $TF_VAR_model_data_url"
-      #     echo "Version suffix: $TF_VAR_model_version_suffix"
-      #     export TF_VAR_sagemaker_endpoint_name=$endpoint_name
-      #     terraform apply -auto-approve
+          if [ -z "$version_suffix" ]; then
+            echo "ERROR: Could not extract version suffix from model path: $latest_model"
+            exit 1
+          fi
+
+          echo "Extracted version suffix: $version_suffix"
+
+          echo "TF_VAR_model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
+          echo "TF_VAR_model_version_suffix=${version_suffix}" >> $GITHUB_ENV
+          echo "endpoint_name=xgboostmodel-endpoint-${version_suffix}" >> $GITHUB_ENV
 
 
+      - name: Deploy Terraform
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "Packaging Lambda function with dependencies"
+          mkdir -p ../build
+          pip install -r ../lambda/requirements.txt -t ../build/
+          cp ../lambda/inference_lambda.py ../build/
+          cd ../build
+          zip -r ../lambda_package.zip .
+          mv ../lambda_package.zip ../terraform/
+          cd ../terraform
+
+          echo "Model path: $TF_VAR_model_data_url"
+          echo "Version suffix: $TF_VAR_model_version_suffix"
+          export TF_VAR_sagemaker_endpoint_name=$endpoint_name
+          terraform apply -auto-approve
 
 
-      # - name: Conditionally Load Test SageMaker Endpoint
-      #   run: |
-      #     echo "Running load test"
-      #     python test/load_test_sagemaker.py
 
-      # - name: Conditionally Run Inference Smoke Test
-      #   if: needs.detect-changes.outputs.smoke == 'true'
-      #   run: |
-      #     echo "Running smoke test due to changes in smoke_test_inference.py"
-      #     python test/smoke_test_inference.py
+
+      - name: Conditionally Load Test SageMaker Endpoint
+        run: |
+          echo "Running load test"
+          python test/load_test_sagemaker.py
+
+      - name: Conditionally Run Inference Smoke Test
+        if: needs.detect-changes.outputs.smoke == 'true'
+        run: |
+          echo "Running smoke test due to changes in smoke_test_inference.py"
+          python test/smoke_test_inference.py
