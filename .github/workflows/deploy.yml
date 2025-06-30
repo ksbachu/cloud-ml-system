@@ -45,7 +45,8 @@ jobs:
             train:
               - 'model/train_model.py'
   deploy:
-    needs: detect-changes
+    needs: [detect-changes]
+    if: always() 
     runs-on: ubuntu-latest
     env:
       S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
