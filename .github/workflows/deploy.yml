@@ -30,7 +30,6 @@ jobs:
           filters: |
             train:
               - 'model/train_model.py'
-              - 'infra/**'
             smoke:
               - 'test/smoke_test_inference.py'
 
@@ -43,7 +42,7 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       SAGEMAKER_ENDPOINT_NAME: ${{ secrets.SAGEMAKER_ENDPOINT }}
       TF_VAR_sagemaker_endpoint: ${{ secrets.SAGEMAKER_ENDPOINT }}
-      API_GATEWAY_URL: ${{ secrets.API_GATEWAY_URL }} 
+      API_GATEWAY_URL: ${{ secrets.API_GATEWAY_URL }}
     environment: ml-sagemaker-deploy
 
     steps:
@@ -76,12 +75,28 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Conditionally Train and Deploy Model
+        if: needs.detect-changes.outputs.train == 'true'
         run: |
-          echo "Training and deploying model due to changes in train_model.py"
+          echo "Training and uploading new model..."
           python model/train_model.py
-          python infra/upload_model_to_s3.py
 
-      - name: Conditionally Deploy Inference Proxy (Lambda + API Gateway)
+      - name: Get Latest Model from S3
+        if: needs.detect-changes.outputs.train == 'true'
+        id: get_latest_model
+        run: |
+          BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+          PREFIX=models/
+
+          latest_model=$(aws s3api list-objects-v2 \
+            --bucket "$BUCKET_NAME" \
+            --prefix "$PREFIX" \
+            --query 'sort_by(Contents, &LastModified)[-1].Key' \
+            --output text)
+
+          echo "Latest model key: $latest_model"
+          echo "model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
+
+      - name: Deploy Terraform
         working-directory: ${{ env.TF_DIR }}
         run: |
           echo "Packaging Lambda function with dependencies"
@@ -92,6 +107,9 @@ jobs:
           zip -r ../lambda_package.zip .
           mv ../lambda_package.zip ../terraform/
           cd ../terraform
+
+          echo "Deploying Terraform with model: $model_data_url"
+          export TF_VAR_model_data_url=$model_data_url
           terraform apply -auto-approve
 
       - name: Conditionally Load Test SageMaker Endpoint

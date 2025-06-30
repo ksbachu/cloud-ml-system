@@ -6,11 +6,17 @@ import os
 import logging
 import watchtower
 import tarfile
+import boto3
+from datetime import datetime
 
 # Logger setup with CloudWatch
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/train-model"))
+
+# AWS clients
+s3 = boto3.client("s3")
+S3_BUCKET = os.environ.get("S3_BUCKET")  # ensure this is set in environment
 
 def generate_and_train():
     logger.info("Generating synthetic dataset...")
@@ -31,20 +37,29 @@ def generate_and_train():
     )
     model.fit(X, y)
 
-    os.makedirs("model", exist_ok=True)
+    # Create versioned model directory
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    model_dir = f"model/{timestamp}"
+    os.makedirs(model_dir, exist_ok=True)
 
-    # Valid SageMaker model filename (no dots, no underscores)
-    model_file_name = "xgboostmodel"  # must match regex ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$
+    model_file_name = "xgboostmodel"
+    model_path = f"{model_dir}/{model_file_name}"
 
-    # Save model using booster.save_model
-    model.get_booster().save_model(f"model/{model_file_name}")
-    logger.info(f"Model saved in XGBoost binary format at: model/{model_file_name}")
+    model.get_booster().save_model(model_path)
+    logger.info(f"Model saved in XGBoost binary format at: {model_path}")
 
-    # Tar it with correct internal file name
-    with tarfile.open("model/model.tar.gz", "w:gz") as tar:
-        tar.add(f"model/{model_file_name}", arcname=model_file_name)
+    # Create tar.gz archive
+    tar_path = f"{model_dir}/model.tar.gz"
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.add(model_path, arcname=model_file_name)
+    logger.info(f"Model archive created at {tar_path}")
 
-    logger.info("Model archive created at model/model.tar.gz")
+    # Upload to S3: s3://<bucket>/models/xgboostmodel_<timestamp>/model.tar.gz
+    s3_key = f"models/xgboostmodel_{timestamp}/model.tar.gz"
+    s3.upload_file(tar_path, S3_BUCKET, s3_key)
+    logger.info(f"Uploaded model to s3://{S3_BUCKET}/{s3_key}")
 
 if __name__ == "__main__":
+    if not os.environ.get("S3_BUCKET"):
+        raise EnvironmentError("Missing required environment variable: S3_BUCKET")
     generate_and_train()
