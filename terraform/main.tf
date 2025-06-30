@@ -220,4 +220,8 @@ resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
     managed_by  = "terraform"
     version     = var.model_version_suffix
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
