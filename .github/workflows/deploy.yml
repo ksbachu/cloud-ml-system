@@ -30,6 +30,7 @@ jobs:
           filters: |
             train:
               - 'model/train_model.py'
+              - 'terraform/**'
             smoke:
               - 'test/smoke_test_inference.py'
 
@@ -93,9 +94,8 @@ jobs:
             --query 'sort_by(Contents, &LastModified)[-1].Key' \
             --output text)
 
-          echo "Latest model key: $latest_model"
-          echo "model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
-          echo "github_run_id=${GITHUB_RUN_ID}" >> $GITHUB_ENV
+          echo "TF_VAR_model_data_url=s3://$BUCKET_NAME/$latest_model" >> tf_env_vars.sh
+          echo "TF_VAR_model_version_suffix=${GITHUB_RUN_ID}" >> tf_env_vars.sh
       - name: Deploy Terraform
         working-directory: ${{ env.TF_DIR }}
         run: |
@@ -108,9 +108,14 @@ jobs:
           mv ../lambda_package.zip ../terraform/
           cd ../terraform
 
-          export TF_VAR_model_version_suffix=${github_run_id}
-          export TF_VAR_model_data_url=$model_data_url
+          # Load TF_VAR_ environment variables
+          if [ -f ../tf_env_vars.sh ]; then
+            source ../tf_env_vars.sh
+          fi
+
+          # Now Terraform will automatically pick up TF_VAR_* environment variables
           terraform apply -auto-approve
+
 
       - name: Conditionally Load Test SageMaker Endpoint
         run: |
