@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "cloud-ml-tf-state"        
+    bucket = "cloud-ml-tf-state"
     key    = "sagemaker/model-deployment.tfstate"
     region = "us-east-1"
     encrypt = true
@@ -8,30 +8,37 @@ terraform {
 }
 
 provider "aws" {
-  region                  = var.region
-  access_key              = var.aws_access_key
-  secret_key              = var.aws_secret_key
+  region     = var.region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
-
 resource "aws_s3_bucket" "model_bucket" {
-  bucket = "cloud-ml-lead-scoring-models"
+  bucket = var.bucket_name
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
 resource "aws_iam_role" "sagemaker_execution_role" {
-  name = "cloud-ml-sagemaker-execution-role"
+  name               = "cloud-ml-sagemaker-execution-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "sagemaker.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
+    Statement = [{
+      Effect = "Allow",
+      Principal = { Service = "sagemaker.amazonaws.com" },
+      Action    = "sts:AssumeRole"
+    }]
   })
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
@@ -44,29 +51,29 @@ resource "aws_iam_role_policy_attachment" "attach_logs_policy" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
-# IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name = "lambda-sagemaker-inference-role"
-
+  name               = "lambda-sagemaker-inference-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
       Effect = "Allow",
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
+      Principal = { Service = "lambda.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
-# Attach basic Lambda permissions
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Custom IAM Policy: S3 + SageMaker Invoke
 resource "aws_iam_policy" "lambda_custom" {
   name = "lambda-sagemaker-s3-policy"
 
@@ -74,27 +81,30 @@ resource "aws_iam_policy" "lambda_custom" {
     Version = "2012-10-17",
     Statement = [
       {
-        Action: ["sagemaker:InvokeEndpoint"],
-        Effect: "Allow",
-        Resource: "*"
+        Action   = ["sagemaker:InvokeEndpoint"],
+        Effect   = "Allow",
+        Resource = "*"
       },
       {
-        Action: ["s3:PutObject"],
-        Effect: "Allow",
-        Resource: "arn:aws:s3:::${var.bucket_name}/*"
+        Action   = ["s3:PutObject"],
+        Effect   = "Allow",
+        Resource = "arn:aws:s3:::${var.bucket_name}/*"
       }
     ]
   })
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
-
-# Attach custom policy
 resource "aws_iam_role_policy_attachment" "lambda_custom_attach" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_custom.arn
 }
 
-# Lambda function
 resource "aws_lambda_function" "inference" {
   function_name         = "inference-handler"
   filename              = "${path.module}/lambda_package.zip"
@@ -110,20 +120,31 @@ resource "aws_lambda_function" "inference" {
       S3_BUCKET               = aws_s3_bucket.model_bucket.bucket
     }
   }
+
+  tags = {
+    project        = var.project
+    environment    = var.environment
+    managed_by     = "terraform"
+    model_version  = var.model_version_suffix
+  }
 }
 
-
-# API Gateway (HTTP API)
 resource "aws_apigatewayv2_api" "api" {
   name          = "inference-api"
   protocol_type = "HTTP"
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
-  api_id             = aws_apigatewayv2_api.api.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.inference.invoke_arn
-  integration_method = "POST"
+  api_id                = aws_apigatewayv2_api.api.id
+  integration_type      = "AWS_PROXY"
+  integration_uri       = aws_lambda_function.inference.invoke_arn
+  integration_method    = "POST"
   payload_format_version = "2.0"
 }
 
@@ -137,6 +158,12 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
   auto_deploy = true
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+  }
 }
 
 resource "aws_lambda_permission" "api_gateway_permission" {
@@ -147,24 +174,25 @@ resource "aws_lambda_permission" "api_gateway_permission" {
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
 
-# -----------------------------
-# SageMaker Model Deployment
-# -----------------------------
-
-# SageMaker model using XGBoost container
 resource "aws_sagemaker_model" "xgboost_model" {
-  name               = "xgboostmodel"
+  name               = "xgboostmodel-${var.model_version_suffix}"
   execution_role_arn = aws_iam_role.sagemaker_execution_role.arn
 
   primary_container {
     image          = "683313688378.dkr.ecr.${var.region}.amazonaws.com/sagemaker-xgboost:1.7-1"
     model_data_url = var.model_data_url
   }
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+    version     = var.model_version_suffix
+  }
 }
 
-# SageMaker Endpoint Configuration
 resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
-  name = "xgboostmodel-config"
+  name = "xgboostmodel-config-${var.model_version_suffix}"
 
   production_variants {
     variant_name           = "AllTraffic"
@@ -173,10 +201,23 @@ resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
   }
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+    version     = var.model_version_suffix
+  }
 }
 
-# SageMaker Endpoint
 resource "aws_sagemaker_endpoint" "xgboost_endpoint" {
   name                 = "xgboostmodel-endpoint3"
   endpoint_config_name = aws_sagemaker_endpoint_configuration.xgboost_endpoint_config.name
+
+  tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = "terraform"
+    version     = var.model_version_suffix
+  }
 }

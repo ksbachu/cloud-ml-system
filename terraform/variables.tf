@@ -1,3 +1,16 @@
+variable "project" {
+  default = "cloud-ml-lead-scoring"
+}
+
+variable "environment" {
+  default = "dev"
+}
+
+variable "model_version_suffix" {
+  description = "Version or timestamp suffix for model and endpoint naming"
+  type        = string
+}
+
 variable "bucket_name" {
   default = "cloud-ml-lead-scoring-models"
 }

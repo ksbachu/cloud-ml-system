@@ -106,6 +106,7 @@ def generate_and_train():
     s3_key = f"models/xgboostmodel_{timestamp}/model.tar.gz"
     metrics_key = f"models/xgboostmodel_{timestamp}/metrics.json"
 
+    
     s3.upload_file(tar_path, S3_BUCKET, s3_key)
     s3.upload_file(metrics_path, S3_BUCKET, metrics_key)
     train_logger.info(f"Uploaded model: s3://{S3_BUCKET}/{s3_key}")

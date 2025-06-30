@@ -95,7 +95,7 @@ jobs:
 
           echo "Latest model key: $latest_model"
           echo "model_data_url=s3://$BUCKET_NAME/$latest_model" >> $GITHUB_ENV
-
+          echo "github_run_id=${GITHUB_RUN_ID}" >> $GITHUB_ENV
       - name: Deploy Terraform
         working-directory: ${{ env.TF_DIR }}
         run: |
@@ -108,7 +108,7 @@ jobs:
           mv ../lambda_package.zip ../terraform/
           cd ../terraform
 
-          echo "Deploying Terraform with model: $model_data_url"
+          export TF_VAR_model_version_suffix=${github_run_id}
           export TF_VAR_model_data_url=$model_data_url
           terraform apply -auto-approve
 
