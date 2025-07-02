@@ -199,7 +199,7 @@ resource "aws_sagemaker_endpoint_configuration" "xgboost_endpoint_config" {
     variant_name           = "AllTraffic"
     model_name             = aws_sagemaker_model.xgboost_model.name
     initial_instance_count = 1
-    instance_type          = "ml.t2.medium"
+    instance_type          = "ml.m5.large"
     initial_variant_weight = 1
   }
 
