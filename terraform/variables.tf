@@ -42,3 +42,14 @@ variable "model_data_url" {
   description = "The S3 path to the model artifact"
   type        = string
 }
+variable "autoscaling_min_capacity" {
+  default = 1
+}
+
+variable "autoscaling_max_capacity" {
+  default = 10
+}
+
+variable "target_invocations_per_instance" {
+  default = 30.0
+}

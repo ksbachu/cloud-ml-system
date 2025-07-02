@@ -38,6 +38,7 @@ impact_logger.addHandler(watchtower.CloudWatchLogHandler(
     log_group="/ml/impact_analysis", stream_name="impact", create_log_group=True))
 
 
+
 def generate_and_train():
     train_logger.info("Generating synthetic dataset...")
     X, y = make_classification(

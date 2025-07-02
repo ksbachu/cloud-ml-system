@@ -11,7 +11,8 @@ import watchtower
 from datetime import datetime
 
 # === Config ===
-API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
+# API_GATEWAY_URL = os.environ.get("API_GATEWAY_URL")
+API_GATEWAY_URL = 'https://3p45j4ezz4.execute-api.us-east-1.amazonaws.com/predict'
 S3_BUCKET = os.environ.get("S3_BUCKET")
 N_REQUESTS = 300
 CONCURRENCY = 300
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 if not logger.handlers:
     logger.addHandler(logging.StreamHandler())
-logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/test-load-api"))
+# logger.addHandler(watchtower.CloudWatchLogHandler(log_group="/ml/test-load-api"))
 
 # === S3 Client ===
 s3 = boto3.client("s3", region_name=os.getenv("AWS_REGION", "us-east-1"))
